@@ -29,4 +29,7 @@ nuget:Install-Package EntityFramework
 </appSettings>teambition
 4-------------If occured "调用的目标发生了异常", 请尝试添加EntityFramework.SqlServerCompact(nuget)
 5-------------If visual studio is 2015 or higher, replace SqlServer instance from from v11.0 to MSSQLLocalDB
+6-------------Implement views
+7-------------Install Pager control
+nuget:Install-Package PagedList.Mvc
  
