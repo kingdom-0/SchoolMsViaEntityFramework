@@ -15,10 +15,10 @@
             @Html.DisplayNameFor(model => model.FirstName)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.LastName)
+            @Html.ActionLink("Last name","Index",new { sortOrder =ViewBag.NameSortParam })
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.EnrollmentDate)
+            @Html.ActionLink("EnrollmentDate", "Index", new { sortOrder=ViewBag.DateSortParm });
         </th>
         <th></th>
     </tr>
