@@ -35,7 +35,7 @@ namespace SchoolMsViaEntityFramework.Controllers
                            select s;
             if (!string.IsNullOrEmpty(searchString))
             {
-                students = students.Where(x => x.FirstName.Contains(searchString) 
+                students = students.Where(x => x.FirstMidName.Contains(searchString) 
                 || x.LastName.Contains(searchString));
             }
             
@@ -68,7 +68,7 @@ namespace SchoolMsViaEntityFramework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var student = db.Students.FirstOrDefault(x => x.Id == id);
+            var student = db.Students.FirstOrDefault(x => x.ID == id);
             if(student == null)
             {
                 return HttpNotFound();
@@ -182,7 +182,7 @@ namespace SchoolMsViaEntityFramework.Controllers
                 //db.Students.Remove(student);
 
                 //Improving performance in a high-volume
-                var student = new Student() { Id = id };
+                var student = new Student() { ID = id };
                 db.Entry(student).State = EntityState.Deleted;
                 db.SaveChanges();
             }

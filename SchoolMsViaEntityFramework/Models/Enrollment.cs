@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
@@ -7,22 +8,18 @@ namespace SchoolMsViaEntityFramework.Models
 {
     public enum Grade
     {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F
+        A, B, C, D, F
     }
 
     public class Enrollment
     {
-        public int Id { get; set; }
-        public int CourseId { get; set; }
-        public int StudentId { get; set; }
+        public int EnrollmentID { get; set; }
+        public int CourseID { get; set; }
+        public int StudentID { get; set; }
+        [DisplayFormat(NullDisplayText = "No grade")]
         public Grade? Grade { get; set; }
 
-        public ICollection<Course> Courses { get; set; }
-        public ICollection<Student> Students { get; set; }
+        public virtual Course Course { get; set; }
+        public virtual Student Student { get; set; }
     }
 }
