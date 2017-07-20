@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using PagedList;
 using SchoolMsViaEntityFramework.DAL;
 using SchoolMsViaEntityFramework.Models;
+using System.Data.Entity.Infrastructure;
 
 namespace SchoolMsViaEntityFramework.Controllers
 {
@@ -97,7 +98,7 @@ namespace SchoolMsViaEntityFramework.Controllers
                     return RedirectToAction("Index");
                 }
             }
-            catch (Exception ex)
+            catch (RetryLimitExceededException ex)
             {
                 //TODO:log
                 ModelState.AddModelError("", "Unable to save state. Try again, and if the problem persist see your system administrator.");
@@ -142,7 +143,7 @@ namespace SchoolMsViaEntityFramework.Controllers
                     db.SaveChanges();
                     return RedirectToAction("Index");
                 }
-                catch (DataException ex)
+                catch (RetryLimitExceededException ex)
                 {
                     ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists, see your system administrator.");
                 }
@@ -185,7 +186,7 @@ namespace SchoolMsViaEntityFramework.Controllers
                 db.Entry(student).State = EntityState.Deleted;
                 db.SaveChanges();
             }
-            catch (Exception)
+            catch (RetryLimitExceededException)
             {
                 //TODO,LOG
                 RedirectToAction("Delete", new { id = id, saveChangesError = true });
