@@ -31,6 +31,7 @@ namespace SchoolMsViaEntityFramework.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+            
             Department department = db.Departments.Find(id);
             if (department == null)
             {
@@ -158,29 +159,57 @@ namespace SchoolMsViaEntityFramework.Controllers
         }
 
         // GET: Departments/Delete/5
-        public ActionResult Delete(int? id)
+        public async Task<ActionResult> Delete(int? id, bool? concurrencyError)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Department department = db.Departments.Find(id);
+            Department department = await db.Departments
+                .Include(x=>x.Administrator)
+                .SingleOrDefaultAsync(x=>x.InstructorID == id);
             if (department == null)
             {
+                if(concurrencyError.GetValueOrDefault())
+                {
+                    return RedirectToAction("Index");
+                }
                 return HttpNotFound();
             }
+
+            if(concurrencyError.GetValueOrDefault())
+            {
+                ViewData["ConcurrencyErrorMessage"] = "The record you attempted to delete "
+                    + "was modified by another user after you got the original values. "
+                    + "The delete operation was canceled and the current values in the "
+                    + "database have been displayed. If you still want to delete this "
+                    + "record, click the Delete button again. Otherwise "
+                    + "click the Back to List hyperlink.";
+            }
+
             return View(department);
         }
 
         // POST: Departments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> Delete(Department department)
         {
-            Department department = db.Departments.Find(id);
-            db.Departments.Remove(department);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            try
+            {
+                if(await db.Departments.AnyAsync(m=>m.DepartmentID == department.DepartmentID))
+                {
+                    var departmentToDelete = await db.Departments.FirstOrDefaultAsync(x => x.DepartmentID == department.DepartmentID);
+                    db.Departments.Remove(departmentToDelete);
+                    await db.SaveChangesAsync();
+                }
+                return RedirectToAction("Index");
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                //TODO:Log
+                return RedirectToAction("Delete", new { id = department.DepartmentID, concurrencyError = true });
+            }
         }
 
         protected override void Dispose(bool disposing)

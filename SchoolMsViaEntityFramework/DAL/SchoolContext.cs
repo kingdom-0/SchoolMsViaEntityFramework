@@ -21,6 +21,7 @@ namespace SchoolMsViaEntityFramework.DAL
         public DbSet<Instructor> Instructors { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<OfficeAssignment> OfficeAssignments { get; set; }
+        public DbSet<Person> People { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -33,6 +34,7 @@ namespace SchoolMsViaEntityFramework.DAL
             modelBuilder.Entity<Department>()
                 .Property(p => p.RowVersion)
                 .IsConcurrencyToken();
+            modelBuilder.Entity<Person>().ToTable("Person");
         }
     }
 }
