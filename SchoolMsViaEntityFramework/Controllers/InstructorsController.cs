@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using SchoolMsViaEntityFramework.DAL;
 using SchoolMsViaEntityFramework.Models;
 using SchoolMsViaEntityFramework.ViewModels;
+using System.Threading.Tasks;
 
 namespace SchoolMsViaEntityFramework.Controllers
 {
@@ -142,11 +143,13 @@ namespace SchoolMsViaEntityFramework.Controllers
         // POST: Instructors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Instructor instructor = db.Instructors.Find(id);
+            Instructor instructor = await db.Instructors.Include(i => i.Courses).SingleAsync(x=>x.ID == id);
+            var departments = await db.Departments.Where(d => d.InstructorID == id).ToListAsync();
+            departments.ForEach(d => d.InstructorID = null);
             db.Instructors.Remove(instructor);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
