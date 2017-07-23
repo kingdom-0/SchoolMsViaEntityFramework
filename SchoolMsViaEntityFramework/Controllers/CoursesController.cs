@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using System.Data.Entity.Infrastructure;
 using SchoolMsViaEntityFramework.DAL;
 using SchoolMsViaEntityFramework.Models;
+using System.Threading.Tasks;
 
 namespace SchoolMsViaEntityFramework.Controllers
 {
@@ -24,13 +25,13 @@ namespace SchoolMsViaEntityFramework.Controllers
         }
 
         // GET: Courses/Details/5
-        public ActionResult Details(int? id)
+        public async Task<ActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Course course = db.Courses.Find(id);
+            Course course = await db.Courses.AsNoTracking().FirstOrDefaultAsync(x=>x.CourseID == id);
             if (course == null)
             {
                 return HttpNotFound();
@@ -50,20 +51,20 @@ namespace SchoolMsViaEntityFramework.Controllers
         // 详细信息，请参阅 https://go.microsoft.com/fwlink/?LinkId=317598。
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "CourseID,Title,Credits,DepartmentID")] Course course)
+        public async Task<ActionResult> Create([Bind(Include = "CourseID,Title,Credits,DepartmentID")] Course course)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
                     db.Courses.Add(course);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                     return RedirectToAction("Index");
                 }
             }
             catch (RetryLimitExceededException)
             {
-
+                //TODO:Log
                 throw;
             }
             PopulateDepartmentsDropDownList(course.DepartmentID);
@@ -72,13 +73,13 @@ namespace SchoolMsViaEntityFramework.Controllers
         }
 
         // GET: Courses/Edit/5
-        public ActionResult Edit(int? id)
+        public async Task<ActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Course course = db.Courses.Find(id);
+            Course course = await db.Courses.AsNoTracking().SingleOrDefaultAsync(m=>m.CourseID == id);
             if (course == null)
             {
                 return HttpNotFound();
@@ -92,38 +93,45 @@ namespace SchoolMsViaEntityFramework.Controllers
         // 详细信息，请参阅 https://go.microsoft.com/fwlink/?LinkId=317598。
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public ActionResult EditPost(int? id)
+        public async Task<ActionResult> EditPost(int? id)
         {
             if(id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var courseToUpdate = db.Courses.Find(id);
-            if(TryUpdateModel(courseToUpdate,"",new string[] { "Title","Credits","DepartmentID"}))
+            var courseToUpdate = await db.Courses
+                .SingleOrDefaultAsync(c => c.CourseID == id);
+
+            if (TryUpdateModel(courseToUpdate,
+                "",new string[] {"DepartmentID","Title","Credits"}))
             {
                 try
                 {
-                    db.SaveChanges();
-                    return RedirectToAction("Index");
+                    await db.SaveChangesAsync();
                 }
-                catch (RetryLimitExceededException)
+                catch (DbUpdateException /* ex */)
                 {
-                    ModelState.AddModelError("", "Unable to save changes, Try again, and if the problem persists, see your system adiministrator.");
+                    //Log the error (uncomment ex variable name and write a log.)
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                        "Try again, and if the problem persists, " +
+                        "see your system administrator.");
                 }
+                return RedirectToAction("Index");
             }
-            
+
+
             PopulateDepartmentsDropDownList(courseToUpdate.DepartmentID);
             return View(courseToUpdate);
         }
 
         // GET: Courses/Delete/5
-        public ActionResult Delete(int? id)
+        public async Task<ActionResult> Delete(int? Id)
         {
-            if (id == null)
+            if (Id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Course course = db.Courses.Find(id);
+            Course course = await db.Courses.AsNoTracking().SingleOrDefaultAsync(x=>x.CourseID == Id);
             if (course == null)
             {
                 return HttpNotFound();
@@ -134,9 +142,9 @@ namespace SchoolMsViaEntityFramework.Controllers
         // POST: Courses/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult DeleteConfirmed(int Id)
         {
-            Course course = db.Courses.Find(id);
+            Course course = db.Courses.Find(Id);
             db.Courses.Remove(course);
             db.SaveChanges();
             return RedirectToAction("Index");
@@ -147,7 +155,7 @@ namespace SchoolMsViaEntityFramework.Controllers
             var departmentQuery = from d in db.Departments
                                   orderby d.Name
                                   select d;
-            ViewBag.DepartmentID = new SelectList(departmentQuery, "DepartmentID", "Name", selectedDepartment);
+            ViewBag.DepartmentID = new SelectList(departmentQuery.AsNoTracking(), "DepartmentID", "Name", selectedDepartment);
         }
 
         protected override void Dispose(bool disposing)
